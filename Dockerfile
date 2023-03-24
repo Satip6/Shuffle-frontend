@@ -1,4 +1,3 @@
-# Build environment
 FROM node:14 as builder
 
 RUN mkdir /usr/src/app
@@ -43,8 +42,8 @@ RUN curl -sSL https://github.com/kelseyhightower/confd/releases/download/v${CONF
 COPY ./confd /etc/confd
 
 # rewrite command & entrypoint with ours
-COPY ./entrypoint.sh /
-ENTRYPOINT [ "/entrypoint.sh" ]
+COPY ./entrypoint.sh /   
+ENTRYPOINT [ "/bin/bash","/entrypoint.sh" ]
 CMD ["nginx", "-g", "daemon off;"]
 
 EXPOSE 80

@@ -89,7 +89,7 @@ import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 
 //import JSONPretty from 'react-json-pretty';
 //import JSONPrettyMon from 'react-json-pretty/dist/monikai'
-import Dropzone from "../components/Dropzone";
+import Dropzone from "../components/Dropzone.jsx";
 
 import { useNavigate, Link } from "react-router-dom";
 import { useAlert } from "react-alert";
@@ -551,7 +551,6 @@ const Workflows = (props) => {
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [publishModalOpen, setPublishModalOpen] = React.useState(false);
   const [editingWorkflow, setEditingWorkflow] = React.useState({});
-  const [importLoading, setImportLoading] = React.useState(false);
   const [isDropzone, setIsDropzone] = React.useState(false);
   const [view, setView] = React.useState("grid");
   const [filters, setFilters] = React.useState([]);
@@ -561,6 +560,9 @@ const Workflows = (props) => {
   const [firstLoad, setFirstLoad] = React.useState(true);
   const [showMoreClicked, setShowMoreClicked] = React.useState(false);
   const [usecases, setUsecases] = React.useState([]);
+  const [allUsecases, setAllUsecases] = React.useState({
+		"success": false,
+	});
   const [appFramework, setAppFramework] = React.useState({});
   const [drawerOpen, setDrawerOpen] = React.useState(false)
   const [videoViewOpen, setVideoViewOpen] = React.useState(false)
@@ -569,6 +571,7 @@ const Workflows = (props) => {
 
 	const sidebarKey = "getting_started_sidebar"
 	if (isLoggedIn === true && gettingStartedItems.length === 0 && (userdata.tutorials !== undefined && userdata.tutorials !== null && userdata.tutorials.length > 0) && workflowDone === true) {
+
 		const activeFiltered = userdata.tutorials.filter((item) => item.active === true)
 		if (activeFiltered.length > 0) {
 			var newfiltered = []
@@ -582,13 +585,12 @@ const Workflows = (props) => {
 
 				newfiltered.push(activeFiltered[key])
 			}
-
 			setGettingStartedItems(activeFiltered)
 
-			const doneFiltered = activeFiltered.filter((item) => item.done === true)
-			if (doneFiltered.length > 0) { 
-				console.log("DONE: ", doneFiltered)
-			}
+			//const doneFiltered = activeFiltered.filter((item) => item.done === true)
+			//if (doneFiltered.length > 0) { 
+			//	console.log("DONE: ", doneFiltered)
+			//}
 
       const sidebar = localStorage.getItem(sidebarKey);
 			if (sidebar === null || sidebar === undefined) {
@@ -597,13 +599,10 @@ const Workflows = (props) => {
 				localStorage.setItem(sidebarKey, "open");
   			setDrawerOpen(true)
       } else {
-				console.log("Got sidebar: ", sidebar)
-
 				if (sidebar === "open") {
 					console.log("OPEN the thingy!")
   				setDrawerOpen(true)
 				} else {
-					console.log("Close the thingy!")
   				setDrawerOpen(false)
 				}
 			}
@@ -619,6 +618,7 @@ const Workflows = (props) => {
 		console.log("Using filters: ", filters)
     if (filters.length === 0) {
       setFilteredWorkflows(workflows);
+			handleKeysetting(allUsecases, workflows)
       return;
     }
 
@@ -688,7 +688,10 @@ const Workflows = (props) => {
       }
     }
 
+		console.log("Changing workflow filter, and finding new usecase mappings!")
     if (newWorkflows.length !== workflows.length) {
+			handleKeysetting(allUsecases, newWorkflows)
+
       setFilteredWorkflows(newWorkflows);
     }
   };
@@ -719,7 +722,7 @@ const Workflows = (props) => {
     var newfilters = filters;
 
     if (index < 0) {
-      console.log("Can't handle index: ", index);
+      console.log("Can't handle index (remove): ", index);
       return;
     }
 
@@ -1020,11 +1023,11 @@ const Workflows = (props) => {
         if (response.status !== 200) {
           console.log("Status not 200 for workflows :O!: ", response.status);
 
-          if (isCloud) {
-            navigate("/search?tab=workflows")
-          }
+          //if (isCloud) {
+          //  navigate("/search?tab=workflows")
+          //}
 
-          alert.info("Failed getting workflows.");
+          alert.info("Failed getting workflows. Are you logged in?");
 
           return;
         }
@@ -1041,9 +1044,6 @@ const Workflows = (props) => {
 
 						newarray.push(wf)
 					}
-
-					// Workflows are set in here
-					fetchUsecases(newarray)
 								
 					var setProdFilter = false 
 
@@ -1072,22 +1072,22 @@ const Workflows = (props) => {
 
 								
 					if (setProdFilter === true) {
-            setFilters(["status:production"]);
 						const newWorkflows = newarray.filter(workflow => workflow.status === "production")
-						console.log(newWorkflows)
 						if (newWorkflows !== undefined && newWorkflows !== null) {
           		setFilteredWorkflows(newWorkflows);
 						} else {
           		setFilteredWorkflows(newarray);
 						}
+            setFilters(["status:production"]);
 					} else { 
           	setFilteredWorkflows(newarray);
 					}
 
+
 					// Ensures the zooming happens only once per load
         	setTimeout(() => {
+						fetchUsecases(newarray)
 						setFirstLoad(false)
-
 					}, 100)
 
         } else {
@@ -1104,9 +1104,6 @@ const Workflows = (props) => {
   };
 
 	const handleKeysetting = (categorydata, workflows) => {
-		//workflows[0].category = ["detect"]
-		//workflows[0].usecase_ids = ["Correlate tickets"]
-
 		if (workflows !== undefined && workflows !== null) {
 			var newcategories = []
 			for (var key in categorydata) {
@@ -1149,8 +1146,6 @@ const Workflows = (props) => {
 		} else {
   		setUsecases(categorydata)
 		}
-    setWorkflows(workflows);
-    setWorkflowDone(true);
 	}
 
   const fetchUsecases = (workflows) => {
@@ -1170,12 +1165,13 @@ const Workflows = (props) => {
         return response.json();
       })
       .then((responseJson) => {
+				setWorkflows(workflows);
+				setWorkflowDone(true);
+
 				if (responseJson.success !== false) {
+					setAllUsecases(responseJson);
 					handleKeysetting(responseJson, workflows)
-				} else {
-        	setWorkflows(workflows);
-      		setWorkflowDone(true);
-				}
+				} 
       })
       .catch((error) => {
         //alert.error("ERROR: " + error.toString());
@@ -1229,7 +1225,6 @@ const Workflows = (props) => {
     display: "flex",
     flexWrap: "wrap",
     alignContent: "space-between",
-    marginTop: 5,
   };
 
   const paperAppStyle = {
@@ -1262,8 +1257,9 @@ const Workflows = (props) => {
 
   const exportAllWorkflows = (allWorkflows) => {
 		for (var i = 0; i < allWorkflows.length; i++) {
+			console.log(allWorkflows[i])
 			setTimeout(() => {
-				console.log(allWorkflows[i].name)
+				console.log(allWorkflows[i])
       	exportWorkflow(allWorkflows[i], false)
 			}, i * 200);
     }
@@ -1583,7 +1579,7 @@ const Workflows = (props) => {
     };
 
     return (
-      <Grid item xs={isMobile || workflows.length === 0 ? 12 : 4} style={{ padding: "12px 10px 12px 10px" }}>
+      <Grid item xs={isMobile ? 12 : 4} style={{ padding: "12px 10px 12px 10px" }}>
         <Paper
           square
           style={setupPaperStyle}
@@ -2211,7 +2207,7 @@ const Workflows = (props) => {
           setTimeout(() => {
             getAvailableWorkflows();
           }, 2500);
-          setImportLoading(false);
+					setSubmitLoading(false)
           setModalOpen(false);
         } else {
           //alert.info("Successfully changed basic info for workflow");
@@ -2222,7 +2218,7 @@ const Workflows = (props) => {
       })
       .catch((error) => {
         alert.error(error.toString());
-        setImportLoading(false);
+				setSubmitLoading(false)
         setModalOpen(false);
         setSubmitLoading(false);
       });
@@ -2230,8 +2226,8 @@ const Workflows = (props) => {
 
   const importFiles = (event) => {
     console.log("Importing!");
+		setSubmitLoading(true)
 
-    setImportLoading(true);
     if (event.target.files.length > 0) {
     	console.log("Files: !", event.target.files.length);
       for (var key in event.target.files) {
@@ -2239,7 +2235,7 @@ const Workflows = (props) => {
         if (file.type !== "application/json") {
           if (file.type !== undefined) {
             alert.error("File has to contain valid json");
-    				setImportLoading(false);
+						setSubmitLoading(false)
           }
 
           continue;
@@ -2253,7 +2249,7 @@ const Workflows = (props) => {
             data = JSON.parse(reader.result);
           } catch (e) {
             alert.error("Invalid JSON: " + e);
-            setImportLoading(false);
+						setSubmitLoading(false)
             return;
           }
     
@@ -2271,35 +2267,35 @@ const Workflows = (props) => {
 						"",
 						data.status,
           )
-					.then((response) => {
-						if (response !== undefined) {
-							// SET THE FULL THING
-							data.id = response.id;
-							data.first_save = false;
-							data.previously_saved = false;
-							data.is_valid = false;
+            .then((response) => {
+              if (response !== undefined) {
+                // SET THE FULL THING
+                data.id = response.id;
+                data.first_save = false;
+                data.previously_saved = false;
+                data.is_valid = false;
 
-							// Actually create it
-							setNewWorkflow(
-								data.name,
-								data.description,
-								data.tags,
-								data.default_return_value,
-								data,
-								false,
-								[],
-								"",
-								data.status,
-							).then((response) => {
-								if (response !== undefined) {
-									alert.success("Successfully imported " + data.name);
-								}
-							});
-						}
-					})
-					.catch((error) => {
-						alert.error("Import error: " + error.toString());
-					});
+                // Actually create it
+                setNewWorkflow(
+                  data.name,
+                  data.description,
+                  data.tags,
+                  data.default_return_value,
+                  data,
+                  false,
+									[],
+									"",
+									data.status,
+                ).then((response) => {
+                  if (response !== undefined) {
+                    alert.success("Successfully imported " + data.name);
+                  }
+                });
+              }
+            })
+            .catch((error) => {
+              alert.error("Import error: " + error.toString());
+            });
         });
 
         // Actually reads
@@ -2768,7 +2764,9 @@ const Workflows = (props) => {
 										return (
 											<span key={index}>
 												<ListSubheader
-													style={{color: usecase.color}}
+													style={{
+														color: usecase.color
+													}}
 												>
 													{usecase.name}
 												</ListSubheader>
@@ -2980,20 +2978,15 @@ const Workflows = (props) => {
         </Tooltip>
       )}
       <Tooltip color="primary" title={"Import workflows"} placement="top">
-        {importLoading ? (
-          <Button color="secondary" style={{}} variant="text" onClick={() => {}}>
-            <CircularProgress style={{ maxHeight: 15, maxWidth: 15 }} />
-          </Button>
-        ) : (
-          <Button
-            color="secondary"
-            style={{}}
-            variant="text"
-            onClick={() => upload.click()}
-          >
-            <PublishIcon />
-          </Button>
-        )}
+				<Button
+					color="secondary"
+					style={{}}
+					variant="text"
+					onClick={() => upload.click()}
+				>
+					
+					{submitLoading ? <CircularProgress color="secondary" /> : <PublishIcon />}
+				</Button>
       </Tooltip>
       <input
         hidden
@@ -3289,17 +3282,20 @@ const Workflows = (props) => {
 					}}
 					*/}
   		
-					<div style={{width: "100%", minHeight: isMobile ? 0 : 71, maxHeight: isMobile ? 0 : 71, }}>
+					<div style={{width: "100%", minHeight: isMobile ? 0 : 51, maxHeight: isMobile ? 0 : 51, marginTop: 10, }}>
 						{!isMobile && usecases !== null && usecases !== undefined && usecases.length > 0 ? 
 							<div style={{ display: "flex", }}>
 								{usecases.map((usecase, index) => {
 									//console.log(usecase)
+									const percentDone = usecase.matches.length > 0 ? parseInt(usecase.matches.length/usecase.list.length*100) : 0
+
 									return (
 										<Paper
 											key={usecase.name}
 											style={{
 												flex: 1,
-												backgroundColor: filters.includes(usecase.name.toLowerCase()) ? usecase.color : theme.palette.surfaceColor,
+												backgroundImage: `linear-gradient(to right, ${usecase.color}, ${usecase.color} ${percentDone}%, transparent ${percentDone}%, transparent 100%)`,
+												backgroundColor: filters.includes(usecase.name.toLowerCase()) ? null : theme.palette.surfaceColor,
 												borderRadius: theme.palette.borderRadius,
 												marginRight: index === usecases.length-1 ? 0 : 10, 
 												cursor: "pointer",
@@ -3308,32 +3304,31 @@ const Workflows = (props) => {
 												padding: 10,
 											}}
 											onClick={() => {
-												console.log("Clicked!")
-												return
-												if (filters.includes(usecase.name.toLowerCase())) {
+												console.log("Filters: ", filters, usecase.name.toLowerCase())
+												if (!filters.includes(usecase.name.toLowerCase())) {
 													addFilter(usecase.name)
 												} else {
-													const foundIndex = filters.indexOf(usecase.name.toLowerCase())
-  												removeFilter(foundIndex) 
+  												removeFilter(filters.indexOf(usecase.name.toLowerCase()))
 												}
 
 											}}
 										>
-											<a href={`/usecases?selected=${usecase.name}`} rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", }}>
-												<Typography variant="body1" color="textPrimary">
+											<span style={{ textDecoration: "none", display: "flex", }}>
+												<Typography variant="body1" color="textPrimary" style={{flex: 4, }}>
 													{usecase.name}
 												</Typography>
-												<Typography variant="body2" color="textSecondary">
-													In use: {usecase.matches.length}/{usecase.list.length}
+												<Typography variant="body2" color="textSecondary" style={{flex: 1, marginTop: 5,}}>
+													{usecase.matches.length}/{usecase.list.length}
 												</Typography>
-											</a>
+											</span>
 										</Paper>
 									)
 								})}
 							</div>
 						: null}
 					</div>
-          <div style={{ marginTop: 15 }} />
+
+          <div style={{ marginTop: 10, marginBottom: 10, }} />
           {!isMobile &&
 					actionImageList !== undefined &&
           actionImageList !== null &&
@@ -3434,44 +3429,48 @@ const Workflows = (props) => {
             })}
             </div>
           ) : null}
-          {view === "grid" ? (
-            <Grid container spacing={4} style={paperAppContainer}>
-							<Zoom in={true} style={{ transitionDelay: `${workflowDelay}ms` }}>
-              	<NewWorkflowPaper />
-							</Zoom>
 
-              {filteredWorkflows.map((data, index) => {
-								// Shouldn't be a part of this list
-								if (data.public === true) {
-									return null
-								}
 
-  							if (firstLoad) {
-									workflowDelay += 75
-								} else {
+					<div style={{marginTop: 15, }}>
+						{view === "grid" ? (
+							<Grid container spacing={4} style={paperAppContainer}>
+								<Zoom in={true} style={{ transitionDelay: `${workflowDelay}ms` }}>
+									<NewWorkflowPaper />
+								</Zoom>
+
+								{filteredWorkflows.map((data, index) => {
+									// Shouldn't be a part of this list
+									if (data.public === true) {
+										return null
+									}
+
+									if (firstLoad) {
+										workflowDelay += 75
+									} else {
+										return (
+											<Grid key={index} item xs={isMobile ? 12 : 4} style={{ padding: "12px 10px 12px 10px" }}>
+												<WorkflowPaper key={index} data={data} />
+											</Grid>
+										)
+									}
+
 									return (
-      							<Grid key={index} item xs={isMobile ? 12 : 4} style={{ padding: "12px 10px 12px 10px" }}>
-											<WorkflowPaper key={index} data={data} />
-      							</Grid>
+										<Zoom key={index} in={true} style={{ transitionDelay: `${workflowDelay}ms` }}>
+											<Grid item xs={isMobile ? 12 : 4} style={{ padding: "12px 10px 12px 10px" }}>
+												<WorkflowPaper key={index} data={data} />
+											</Grid>
+										</Zoom>
 									)
-								}
+								})}
+							</Grid>
+						) : (
+							<WorkflowListView />
+						)}
+					</div>
 
-                return (
-									<Zoom key={index} in={true} style={{ transitionDelay: `${workflowDelay}ms` }}>
-      							<Grid item xs={isMobile ? 12 : 4} style={{ padding: "12px 10px 12px 10px" }}>
-											<WorkflowPaper key={index} data={data} />
-      							</Grid>
-									</Zoom>
-								)
-              })}
-            </Grid>
-          ) : (
-            <WorkflowListView />
-          )}
-
-          <div style={{ marginBottom: 100 }} />
-        </div>
-      </div>
+					<div style={{ marginBottom: 100 }} />
+				</div>
+			</div>
     );
   };
 
@@ -3710,7 +3709,7 @@ const Workflows = (props) => {
           color: "white",
           fontSize: 18,
 					borderLeft: theme.palette.defaultBorder,
-					marginTop: 66,
+					marginTop: 64,
 					borderRadius: "5px 0px 0px 0px",
         },
       }}
@@ -3756,7 +3755,7 @@ const Workflows = (props) => {
 			<div style={{borderTop: "1px solid rgba(255,255,255,0.3)", }}>
 				{gettingStartedItems.map((item, index) => {
 					return (
-						<GettingStartedItem item={item} index={index} />
+						<GettingStartedItem key={index} item={item} index={index} />
 					)
 				})}
 			</div>

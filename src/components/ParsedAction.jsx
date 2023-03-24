@@ -194,13 +194,11 @@ const ParsedAction = (props) => {
 				if (paramcheck.id === "TOGGLED"){ 
   				setHideBody(false)
   				setActivateHidingBodyButton(false)
-					console.log("TOGGLED BODY!")
 				} else {
   				setHideBody(true)
 
 					if (paramcheck.id === "UNTOGGLED") {
   					setActivateHidingBodyButton(false)
-						console.log("UNTOGGLED!")
 					}
 				}
 			}
@@ -277,7 +275,7 @@ const ParsedAction = (props) => {
           console.log("FOUNDACTION: ", foundAction);
           if (foundAction !== null && foundAction !== undefined) {
             var foundparams = [];
-            for (var paramkey in foundAction.parameters) {
+            for (let [paramkey,paramkeyval] in Object.entries(foundAction.parameters)) {
               const param = foundAction.parameters[paramkey];
 
               const foundParam = selectedAction.parameters.find(
@@ -401,7 +399,7 @@ const ParsedAction = (props) => {
       if (actionlist.length === 0) {
         // FIXME: Have previous execution values in here
 				if (workflowExecutions.length > 0) {
-					for (var key in workflowExecutions) {
+					for (let [key,keyval] in Object.entries(workflowExecutions)) {
 						if (
 							workflowExecutions[key].execution_argument === undefined ||
 							workflowExecutions[key].execution_argument === null ||
@@ -451,7 +449,7 @@ const ParsedAction = (props) => {
           workflow.workflow_variables !== undefined &&
           workflow.workflow_variables.length > 0
         ) {
-          for (var key in workflow.workflow_variables) {
+          for (let [key,keyval] in Object.entries(workflow.workflow_variables)) {
             const item = workflow.workflow_variables[key];
             actionlist.push({
               type: "workflow_variable",
@@ -470,7 +468,7 @@ const ParsedAction = (props) => {
           workflow.execution_variables !== undefined &&
           workflow.execution_variables.length > 0
         ) {
-          for (var key in workflow.execution_variables) {
+          for (let [key,keyval] in Object.entries(workflow.execution_variables)) {
             const item = workflow.execution_variables[key];
             actionlist.push({
               type: "execution_variable",
@@ -488,7 +486,7 @@ const ParsedAction = (props) => {
         	var parents = getParents(selectedAction);
 
         	if (parents.length > 1) {
-        	  for (var key in parents) {
+        	  for (let [key,keyval] in Object.entries(parents)) {
         	    const item = parents[key];
         	    if (item.label === "Execution Argument") {
         	      continue;
@@ -500,7 +498,7 @@ const ParsedAction = (props) => {
         	    if (workflowExecutions.length > 0) {
         	      // Look for the ID
         	      const found = false;
-        	      for (var key in workflowExecutions) {
+        	      for (let [key,keyval] in Object.entries(workflowExecutions)) {
         	        if (
         	          workflowExecutions[key].results === undefined ||
         	          workflowExecutions[key].results === null
@@ -566,20 +564,19 @@ const ParsedAction = (props) => {
 
 			if (found !== null && found !== undefined) {
 				var new_occurences = []
-				for (var key in found) {
+				for (let [key,keyval] in Object.entries(found)) {
 					if (found[key][0] !== "\\") {
 						new_occurences.push(found[key])
 					}
 				}
 
-				console.log("New found: ", new_occurences)
 				found = new_occurences.valueOf()
 			}
 
 			if (found !== null) {
 				try {
 					// When the found array is empty.
-					for (var i = 0; i < found.length; i++) {
+					for (let i = 0; i < found.length; i++) {
 						const variableSplit = found[i].split(".#")
 						if ((variableSplit.length-1) > 1) {
 							//console.log("Larger than 1: ", variableSplit)
@@ -589,7 +586,7 @@ const ParsedAction = (props) => {
 						}
 
 						var foundSlice = false
-						for (var j = 0; j < actionlist.length; j++) {
+						for (let j = 0; j < actionlist.length; j++) {
 							//console.log("ACTION: ", found[i], actionlist[j])
 							//console.log("ACTION :", found[i].split(".")[0].slice(1,).toLowerCase(), actionlist[j].autocomplete.toLowerCase())
 							if(found[i].split(".")[0].slice(1,).toLowerCase() == actionlist[j].autocomplete.toLowerCase()){
@@ -627,9 +624,8 @@ const ParsedAction = (props) => {
 			//console.log("Action change: ", selectedAction, data)
       if (data.name.startsWith("${") && data.name.endsWith("}")) {
         // PARAM FIX - Gonna use the ID field, even though it's a hack
-        const paramcheck = selectedAction.parameters.find(
-          (param) => param.name === "body"
-        );
+        const paramcheck = selectedAction.parameters.find((param) => param.name === "body");
+        
         if (paramcheck !== undefined) {
           // Escapes all double quotes
           var toReplace = event.target.value.trim()
@@ -705,10 +701,7 @@ const ParsedAction = (props) => {
       }
 
       // bad detection mechanism probably
-      if (
-        event.target.value[event.target.value.length - 1] === "." &&
-        actionlist.length > 0
-      ) {
+      if (event.target.value[event.target.value.length - 1] === "." && actionlist.length > 0) {
         console.log("GET THE LAST ARGUMENT FOR NODE!");
         // THIS IS AN EXAMPLE OF SHOWING IT
         /*
@@ -730,7 +723,7 @@ const ParsedAction = (props) => {
 
         var curstring = "";
         var record = false;
-        for (var key in selectedActionParameters[count].value) {
+        for (let [key,keyval] in Object.entries(selectedActionParameters[count].value)) {
           const item = selectedActionParameters[count].value[key];
           if (record) {
             curstring += item;
@@ -911,7 +904,7 @@ const ParsedAction = (props) => {
 
 				var curstring = ""
 				var record = false
-				for (var key in selectedActionParameters[count].value) {
+				for (let [key,keyval] in Object.entries(selectedActionParameters[count].value)) {
 					const item = selectedActionParameters[count].value[key]
 					if (record) {
 						curstring += item
@@ -1187,7 +1180,7 @@ const ParsedAction = (props) => {
           		  renderInput={(params) => {
 									if (params.inputProps !== undefined && params.inputProps !== null && params.inputProps.value !== undefined && params.inputProps.value !== null) {
 										const prefixes = ["Post", "Put", "Patch"]
-										for (var key in prefixes) {
+										for (let [key,keyval] in Object.entries(prefixes)) {
 											if (params.inputProps.value.startsWith(prefixes[key])) {
 												params.inputProps.value = params.inputProps.value.replace(prefixes[key]+" ", "", -1)
 												if (params.inputProps.value.length > 1) {
@@ -1346,9 +1339,8 @@ const ParsedAction = (props) => {
             }
 
             if (data.name.startsWith("${") && data.name.endsWith("}")) {
-              const paramcheck = selectedAction.parameters.find(
-                (param) => param.name === "body"
-              );
+              const paramcheck = selectedAction.parameters.find((param) => param.name === "body");
+              
 
               if (paramcheck !== undefined && paramcheck !== null) {
                 if (
@@ -1426,8 +1418,8 @@ const ParsedAction = (props) => {
 
                           setHideBody(!hideBody);
 			
-                          for (var key in selectedActionParameters) {
-                            var currentItem = selectedActionParameters[key];
+                          for (let paramkey in Object.entries(selectedActionParameters)) {
+                            var currentItem = selectedActionParameters[paramkey];
 														if (currentItem.name === "ssl_verify") {
 
 														}
@@ -1472,10 +1464,11 @@ const ParsedAction = (props) => {
                 openApiHelperText = "OpenAPI spec: fill the following fields.";
                 //console.log("SHOULD ADD TO selectedActionParameters!: ", found, selectedActionParameters)
                 var changed = false;
-                for (var specKey in found) {
+                for (let specKey in found) {
                   const tmpitem = found[specKey];
                   var skip = false;
-                  for (var innerkey in selectedActionParameters) {
+
+                  for (let innerkey in selectedActionParameters) {
                     if (selectedActionParameters[innerkey].name === tmpitem) {
                       skip = true;
                       break;
@@ -1707,7 +1700,7 @@ const ParsedAction = (props) => {
 
 							var foundnewline = false
 							var allValues = []
-							for (var key in splitdata) {
+							for (let [key,keyval] in Object.entries(splitdata)) {
 								const line = splitdata[key]
 								if (line === "") {
 									foundnewline = true 
@@ -1777,7 +1770,7 @@ const ParsedAction = (props) => {
 															const tmpsplit = selectedActionParameters[count].value.split("\n")
 															var valsplit = []
 															var add_empty = false
-															for (var key in tmpsplit) {
+															for (let [key,keyval] in Object.entries(tmpsplit)) {
 																if (tmpsplit[key] === "") {
 																	add_empty = true
 																	continue
@@ -1792,7 +1785,7 @@ const ParsedAction = (props) => {
 															console.log("Split: ", valsplit)
 
 															var newarr = []
-															for (var key in valsplit) {
+															for (let [key,keyval] in Object.entries(valsplit)) {
 																var line = valsplit[key]
 
 																if (key == index) {
@@ -1832,7 +1825,7 @@ const ParsedAction = (props) => {
 															var tmpsplit = selectedActionParameters[count].value.split("\n")
 															var valsplit = []
 															var add_empty = false
-															for (var key in tmpsplit) {
+															for (let [key,keyval] in Object.entries(tmpsplit)) {
 																if (tmpsplit[key] === "") {
 																	add_empty = true
 																	continue
@@ -1847,7 +1840,7 @@ const ParsedAction = (props) => {
 															console.log("Split: ", valsplit)
 
 															var newarr = []
-															for (var key in valsplit) {
+															for (let [key,keyval] in Object.entries(valsplit)) {
 																var line = valsplit[key]
 
 																if (key == index) {
@@ -1911,7 +1904,7 @@ const ParsedAction = (props) => {
 
 						// Basic helpertext
 
-            if (data.name.toLowerCase() === "file_category") {
+            if (files !== undefined && files !== null && data.name.toLowerCase() === "file_category") {
               //selectedActionParameters[count].options.length > 0
 							console.log("FileS: ", files)
 							if (files.namespaces !== undefined && files.namespaces !== null && files.namespaces.length > 0) {
@@ -2094,13 +2087,15 @@ const ParsedAction = (props) => {
                   : "$" + values[0].autocomplete;
 
                 toComplete = toComplete.toLowerCase().replaceAll(" ", "_");
-                for (var key in values) {
+                for (let [key,keyval] in Object.entries(values)) {
                   if (key == 0 || values[key].autocomplete.length === 0) {
                     continue;
                   }
 
                   toComplete += values[key].autocomplete;
                 }
+
+												
 
                 // Handles the fields under OpenAPI body to be parsed.
                 if (data.name.startsWith("${") && data.name.endsWith("}")) {
@@ -2135,10 +2130,8 @@ const ParsedAction = (props) => {
                       }
                     }
 
-                    selectedActionParameters[count]["value_replace"] =
-                      paramcheck;
-                    selectedAction.parameters[count]["value_replace"] =
-                      paramcheck;
+                    selectedActionParameters[count]["value_replace"] = paramcheck;
+                    selectedAction.parameters[count]["value_replace"] = paramcheck;
                     setSelectedAction(selectedAction);
                     setUpdate(Math.random());
 
@@ -2148,13 +2141,15 @@ const ParsedAction = (props) => {
                   }
                 }
 
-                selectedActionParameters[count].value += toComplete;
-                selectedAction.parameters[count].value =
-                  selectedActionParameters[count].value;
-                setSelectedAction(selectedAction);
-                setUpdate(Math.random());
-
-                setShowDropdown(false);
+								console.log("In nestedclick!!")
+								var newValue = selectedActionParameters[count].value + toComplete
+								changeActionParameter({target: {value: newValue}}, count, data)
+                //selectedActionParameters[count].value += toComplete;
+                //selectedAction.parameters[count].value = selectedActionParameters[count].value;
+                //setSelectedAction(selectedAction);
+								//setUpdate(Math.random());
+                
+								setShowDropdown(false);
                 setMenuPosition(null);
               };
 
@@ -2205,7 +2200,7 @@ const ParsedAction = (props) => {
                         workflow.triggers !== null &&
                         workflow.triggers.length > 0
                       ) {
-                        for (var key in workflow.triggers) {
+                        for (let [key,keyval] in Object.entries(workflow.triggers)) {
                           const item = workflow.triggers[key];
 
                           if (cy !== undefined) {
@@ -2608,7 +2603,9 @@ const ParsedAction = (props) => {
 
                         setUpdate(Math.random());
                       }}
-                      onClick={() => setShowAutocomplete(true)}
+                      onClick={() => {
+												setShowAutocomplete(true)
+											}}
                       fullWidth
                       open={showAutocomplete}
                       style={{
@@ -2618,22 +2615,12 @@ const ParsedAction = (props) => {
                         borderRadius: theme.palette.borderRadius,
                       }}
                       onChange={(e) => {
-                        if (
-                          selectedActionParameters[count].value[
-                            selectedActionParameters[count].value.length - 1
-                          ] === "."
-                        ) {
-                          e.target.value.autocomplete =
-                            e.target.value.autocomplete.slice(
-                              1,
-                              e.target.value.autocomplete.length
-                            );
+                        if (selectedActionParameters[count].value[selectedActionParameters[count].value.length - 1] === ".") {
+                          e.target.value.autocomplete = e.target.value.autocomplete.slice(1,e.target.value.autocomplete.length);
                         }
 
-                        selectedActionParameters[count].value +=
-                          e.target.value.autocomplete;
-                        selectedAction.parameters[count].value =
-                          selectedActionParameters[count].value;
+                        selectedActionParameters[count].value += e.target.value.autocomplete;
+                        selectedAction.parameters[count].value = selectedActionParameters[count].value;
                         setSelectedAction(selectedAction);
                         setUpdate(Math.random());
 
@@ -2727,13 +2714,18 @@ const ParsedAction = (props) => {
                     if (workflowExecutions.length > 0) {
                       // Look for the ID
                       const found = false;
-                      for (var key in workflowExecutions) {
+                      for (let [key,keyval] in Object.entries(workflowExecutions)) {
                         if (
                           workflowExecutions[key].results === undefined ||
                           workflowExecutions[key].results === null
                         ) {
                           continue;
                         }
+
+												// Enforces it to show at least one
+												//if (workflowExecutions[key].execution_argument.includes("too large") && key !== workflowExecutions.length - 1) {
+												//	continue
+												//}
 
                         var foundResult = workflowExecutions[key].results.find(
                           (result) => result.action.id === selectedAction.id
@@ -2971,121 +2963,123 @@ const ParsedAction = (props) => {
 									//
 									// Should make it a function lol
 									if (workflow.branches !== undefined && workflow.branches !== null) {	
-										for (var key in workflow.branches) {
-											for (var subkey in workflow.branches[key].conditions) {
-												const condition = workflow.branches[key].conditions[subkey]
-												const sourceparam = condition.source
-												const destinationparam = condition.destination
+										for (let [key,keyval] in Object.entries(workflow.branches)) {
+											if (workflow.branches[key].conditions !== undefined && workflow.branches[key].conditions !== null) {
+												for (let [subkey,subkeyval] in Object.entries(workflow.branches[key].conditions)) {
+													const condition = workflow.branches[key].conditions[subkey]
+													const sourceparam = condition.source
+													const destinationparam = condition.destination
 
-												// Should have a smarter way of discovering node names
-												// Finding index(es) and replacing at the location
-												if (sourceparam.value.includes("$")) {
-													try {
-														var cnt = -1
-														var previous = 0
-														while (true) {
-															cnt += 1 
-															// Need to make sure e.g. changing the first here doesn't change the 2nd
-															// $change_me
-															// $change_me_2
-															
-															const foundindex = sourceparam.value.toLowerCase().indexOf(parsedBaseLabel, previous)
-															if (foundindex === previous && foundindex !== 0) {
-																break
-															}
-	
-															if (foundindex >= 0) {
-																previous = foundindex+newname.length
-																// Need to add diff of length to word
-	
-																// Check location:
-																// If it's a-zA-Z_ then don't replace
-																if (sourceparam.value.length > foundindex+parsedBaseLabel.length) {
-																	const regex = /[a-zA-Z0-9_]/g;
-																	const match = sourceparam.value[foundindex+parsedBaseLabel.length].match(regex);
-																	if (match !== null) {
-																		continue
-																	}
-																}
+													// Should have a smarter way of discovering node names
+													// Finding index(es) and replacing at the location
+													if (sourceparam.value.includes("$")) {
+														try {
+															var cnt = -1
+															var previous = 0
+															while (true) {
+																cnt += 1 
+																// Need to make sure e.g. changing the first here doesn't change the 2nd
+																// $change_me
+																// $change_me_2
 																
-																console.log("Old found: ", workflow.branches[key].conditions[subkey].source.value)
-																const extralength = newname.length-parsedBaseLabel.length
-																sourceparam.value = sourceparam.value.substring(0, foundindex) + newname + sourceparam.value.substring(foundindex-extralength+newname.length, sourceparam.value.length)
+																const foundindex = sourceparam.value.toLowerCase().indexOf(parsedBaseLabel, previous)
+																if (foundindex === previous && foundindex !== 0) {
+																	break
+																}
+	
+																if (foundindex >= 0) {
+																	previous = foundindex+newname.length
+																	// Need to add diff of length to word
+	
+																	// Check location:
+																	// If it's a-zA-Z_ then don't replace
+																	if (sourceparam.value.length > foundindex+parsedBaseLabel.length) {
+																		const regex = /[a-zA-Z0-9_]/g;
+																		const match = sourceparam.value[foundindex+parsedBaseLabel.length].match(regex);
+																		if (match !== null) {
+																			continue
+																		}
+																	}
+																	
+																	console.log("Old found: ", workflow.branches[key].conditions[subkey].source.value)
+																	const extralength = newname.length-parsedBaseLabel.length
+																	sourceparam.value = sourceparam.value.substring(0, foundindex) + newname + sourceparam.value.substring(foundindex-extralength+newname.length, sourceparam.value.length)
 
-																console.log("New: ", workflow.branches[key].conditions[subkey].source.value)
-															} else { 
-																break
-															}
+																	console.log("New: ", workflow.branches[key].conditions[subkey].source.value)
+																} else { 
+																	break
+																}
 	
-															// Break no matter what after 5 replaces. May need to increase
-															if (cnt >= 5) {
-																break
-															}
+																// Break no matter what after 5 replaces. May need to increase
+																if (cnt >= 5) {
+																	break
+																}
 	
+															}
+            								} catch (e) {
+															console.log("Failed value replacement based on index: ", e)
 														}
-            							} catch (e) {
-														console.log("Failed value replacement based on index: ", e)
 													}
-												}
 
-												if (destinationparam.value.includes("$")) {
-													try {
-														var cnt = -1
-														var previous = 0
-														while (true) {
-															cnt += 1 
-															// Need to make sure e.g. changing the first here doesn't change the 2nd
-															// $change_me
-															// $change_me_2
-															
-															const foundindex = destinationparam.value.toLowerCase().indexOf(parsedBaseLabel, previous)
-															if (foundindex === previous && foundindex !== 0) {
-																break
-															}
-	
-															if (foundindex >= 0) {
-																previous = foundindex+newname.length
-																// Need to add diff of length to word
-	
-																// Check location:
-																// If it's a-zA-Z_ then don't replace
-																if (destinationparam.value.length > foundindex+parsedBaseLabel.length) {
-																	const regex = /[a-zA-Z0-9_]/g;
-																	const match = destinationparam.value[foundindex+parsedBaseLabel.length].match(regex);
-																	if (match !== null) {
-																		continue
-																	}
-																}
+													if (destinationparam.value.includes("$")) {
+														try {
+															var cnt = -1
+															var previous = 0
+															while (true) {
+																cnt += 1 
+																// Need to make sure e.g. changing the first here doesn't change the 2nd
+																// $change_me
+																// $change_me_2
 																
-																console.log("Old found: ", workflow.branches[key].conditions[subkey].destination.value)
-																const extralength = newname.length-parsedBaseLabel.length
-																destinationparam.value = destinationparam.value.substring(0, foundindex) + newname + destinationparam.value.substring(foundindex-extralength+newname.length, destinationparam.value.length)
+																const foundindex = destinationparam.value.toLowerCase().indexOf(parsedBaseLabel, previous)
+																if (foundindex === previous && foundindex !== 0) {
+																	break
+																}
+	
+																if (foundindex >= 0) {
+																	previous = foundindex+newname.length
+																	// Need to add diff of length to word
+	
+																	// Check location:
+																	// If it's a-zA-Z_ then don't replace
+																	if (destinationparam.value.length > foundindex+parsedBaseLabel.length) {
+																		const regex = /[a-zA-Z0-9_]/g;
+																		const match = destinationparam.value[foundindex+parsedBaseLabel.length].match(regex);
+																		if (match !== null) {
+																			continue
+																		}
+																	}
+																	
+																	console.log("Old found: ", workflow.branches[key].conditions[subkey].destination.value)
+																	const extralength = newname.length-parsedBaseLabel.length
+																	destinationparam.value = destinationparam.value.substring(0, foundindex) + newname + destinationparam.value.substring(foundindex-extralength+newname.length, destinationparam.value.length)
 
-																console.log("New: ", workflow.branches[key].conditions[subkey].destination.value)
-															} else { 
-																break
-															}
+																	console.log("New: ", workflow.branches[key].conditions[subkey].destination.value)
+																} else { 
+																	break
+																}
 	
-															// Break no matter what after 5 replaces. May need to increase
-															if (cnt >= 5) {
-																break
-															}
+																// Break no matter what after 5 replaces. May need to increase
+																if (cnt >= 5) {
+																	break
+																}
 	
+															}
+            								} catch (e) {
+															console.log("Failed value replacement based on index: ", e)
 														}
-            							} catch (e) {
-														console.log("Failed value replacement based on index: ", e)
 													}
 												}
 											}
 										}
 									}
 
-									for (var key in workflow.actions) {
+									for (let [key,keyval] in Object.entries(workflow.actions)) {
 										if (workflow.actions[key].id === selectedAction.id) {
 											continue
 										}
 
-										for (var subkey in workflow.actions[key].parameters) {
+										for (let [subkey, subkeyval] in Object.entries(workflow.actions[key].parameters)) {
 											const param = workflow.actions[key].parameters[subkey];
 											if (!param.value.includes("$")) {
 												continue
@@ -3251,7 +3245,7 @@ const ParsedAction = (props) => {
                   selectedAction.selectedAuthentication = {};
                   selectedAction.authentication_id = "";
 
-                  for (var key in selectedAction.parameters) {
+                  for (let [key,keyval] in Object.entries(selectedAction.parameters)) {
                     //console.log(selectedAction.parameters[key])
                     if (selectedAction.parameters[key].configuration) {
                       selectedAction.parameters[key].value = "";
@@ -3568,7 +3562,7 @@ const ParsedAction = (props) => {
 							if (method.length > 0 && data.description !== undefined && data.description !== null && data.description.includes("http")) {
 								var extraUrl = ""
 								const descSplit = data.description.split("\n")
-								for (var line in descSplit) {
+								for (let [line,lineval] in Object.entries(descSplit)) {
 									if (descSplit[line].includes("http") && descSplit[line].includes("://")) {
 										const urlsplit = descSplit[line].split("/")
 										try {
@@ -3629,7 +3623,7 @@ const ParsedAction = (props) => {
             renderInput={(params) => {
 							if (params.inputProps !== undefined && params.inputProps !== null && params.inputProps.value !== undefined && params.inputProps.value !== null) {
 								const prefixes = ["Post", "Put", "Patch"]
-								for (var key in prefixes) {
+								for (let [key,keyval] in Object.entries(prefixes)) {
 									if (params.inputProps.value.startsWith(prefixes[key])) {
 										params.inputProps.value = params.inputProps.value.replace(prefixes[key]+" ", "", -1)
 										if (params.inputProps.value.length > 1) {

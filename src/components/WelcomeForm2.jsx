@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
 import Button from "@material-ui/core/Button";
 import Checkbox from '@mui/material/Checkbox';
 
@@ -36,6 +36,7 @@ import {
 		Divider,
 		Tooltip,
 		Chip,
+		ButtonGroup,
 } from "@material-ui/core";
 import { useAlert } from "react-alert";
 
@@ -53,7 +54,25 @@ const responsive = {
 const WelcomeForm = (props) => {
 		const { userdata, globalUrl, discoveryWrapper, setDiscoveryWrapper, appFramework, getFramework, activeStep, setActiveStep, steps, skipped, setSkipped, getApps, apps, handleSetSearch, usecaseButtons, defaultSearch, setDefaultSearch, selectionOpen, setSelectionOpen, } = props
 
-		const usecaseItems = [
+    const [usecaseItems, setUsecaseItems] = useState([
+			{
+				"search": "Phishing",
+				"usecase_search": undefined,
+			},
+			{
+				"search": "Enrichment",
+				"usecase_search": undefined,
+			},
+			{
+				"search": "Enrichment",
+				"usecase_search": "SIEM alert enrichment",
+			},
+			{
+				"search": "Build your own",
+				"usecase_search": undefined,
+			}])
+
+			/*
 			<div style={{minWidth: "95%", maxWidth: "95%", marginLeft: 5, marginRight: 5, }}>
 				<UsecaseSearch
 					globalUrl={globalUrl}
@@ -98,7 +117,8 @@ const WelcomeForm = (props) => {
 					userdata={userdata}
 				/>
 			</div>
-		]
+		])
+		*/
 
     const [discoveryData, setDiscoveryData] = React.useState({})
     const [name, setName] = React.useState("")
@@ -122,6 +142,14 @@ const WelcomeForm = (props) => {
 				setDiscoveryWrapper(
 					{"id": label}
 				)
+			}
+
+			if (isCloud) {
+					ReactGA.event({
+						category: "welcome",
+						action: `click_${label}`,
+						label: "",
+					})
 			}
 
 			setSelectionOpen(true)
@@ -165,6 +193,43 @@ const WelcomeForm = (props) => {
 					}
 				} else { 
     			//navigate(`/welcome?tab=1`)
+				}
+
+				const foundTemplate = params["workflow_template"];
+				if (foundTemplate !== null && foundTemplate !== undefined) {
+					console.log("Found workflow template: ", foundTemplate)
+				
+					var sourceapp = undefined
+					var destinationapp = undefined
+					var action = undefined
+					const srcapp = params["source_app"];
+					if (srcapp !== null && srcapp !== undefined) {
+						sourceapp = srcapp
+					}
+
+					const dstapp = params["dest_app"];
+					if (dstapp !== null && dstapp !== undefined) {
+						destinationapp = dstapp
+					}
+
+					const act = params["action"];
+					if (act !== null && act !== undefined) {
+						action = act
+					}
+    
+					//defaultSearch={foundTemplate}
+					//
+					usecaseItems[0] = {
+						"search": "enrichment",
+						"usecase_search": foundTemplate,
+						"sourceapp": sourceapp,
+						"destinationapp": destinationapp,
+						"autotry": action === "try",
+					}
+
+					console.log("Adding: ", usecaseItems[0])
+
+					setUsecaseItems(usecaseItems)
 				}
 			}
 		}, [])
@@ -416,7 +481,27 @@ const WelcomeForm = (props) => {
 			minWidth: buttonWidth, 
 			maxWidth: buttonWidth, 
 		}
-		
+
+
+		const formattedCarousel = appFramework === undefined || appFramework === null ? [] : usecaseItems.map((item, index) => {
+			return (
+				<div style={{minWidth: "95%", maxWidth: "95%", marginLeft: 5, marginRight: 5, }}>
+					<UsecaseSearch
+						globalUrl={globalUrl}
+						defaultSearch={item.search}
+						usecaseSearch={item.usecase_search}
+						appFramework={appFramework}
+						apps={apps}
+						getFramework={getFramework}
+						userdata={userdata}
+						autotry={item.autotry}
+						sourceapp={item.sourceapp}
+						destinationapp={item.destinationapp}
+					/>
+				</div>
+			)
+		})
+
     const getStepContent = (step) => {
         switch (step) {
             case 0:
@@ -508,14 +593,8 @@ const WelcomeForm = (props) => {
                 return (
 									<Fade in={true}>
                     <div style={{minHeight: sizing, maxHeight: sizing, marginTop: 20, maxWidth: 500, }}>
-												<Typography variant="body1" style={{marginLeft: 8, marginTop: 25, marginRight: 30, marginBottom: 0, }} color="textSecondary">
-													Clicks the buttons below to find your apps, then we will help you find relevant workflows. Can't find your app? <span style={{color: "#f86a3e", cursor: "pointer"}} onClick={() => {
-														if (window.drift !== undefined) {
-															window.drift.api.startInteraction({ interactionId: 340043 })
-														} else {
-															console.log("Couldn't find drift in window.drift and not .drift-open-chat with querySelector: ", window.drift)
-														}
-													}}>Contact our App Developers!</span>
+												<Typography variant="body1" style={{marginLeft: 8, marginTop: 50, marginRight: 30, marginBottom: 0, }} color="textSecondary">
+													Apps for each category are shown based on your activity and can be changed by clicking their icon. We will help you connect them later.
 												</Typography>
 												{/*The app framework helps us access and authenticate the most important APIs for you. */}
 
@@ -536,7 +615,14 @@ const WelcomeForm = (props) => {
                         <Grid item xs={11} style={{marginTop: 25, }}>
                             {/*<FormLabel style={{ color: "#B9B9BA" }}>Find your integrations!</FormLabel>*/}
                             <div style={{display: "flex"}}>
-															<Button disabled={finishedApps.includes("CASES")} variant={defaultSearch === "CASES" ? "contained" : "outlined"}  style={buttonStyle} startIcon={<LightbulbIcon />} onClick={(event) => { onNodeSelect("CASES") }} >
+															<Button disabled={finishedApps.includes("CASES")} variant={defaultSearch === "CASES" ? "contained" : "outlined"}  style={{
+																flex: 1,
+																width: "100%", 
+																padding: 25,
+																margin: buttonMargin,
+																fontSize: 18,
+																borderColor: finishedApps.includes("CASES") ? "inherit" : "#f86a3e",
+															}} startIcon={<LightbulbIcon />} onClick={(event) => { onNodeSelect("CASES") }} >
 																	Case Management	
 															</Button>
                             </div>
@@ -676,10 +762,10 @@ const WelcomeForm = (props) => {
 														<div style={{minWidth: 554, maxWidth: 554, borderRadius: theme.palette.borderRadius, padding: 25, }}>
 															<AliceCarousel
 																	style={{ backgroundColor: theme.palette.surfaceColor, minHeight: 750, maxHeight: 750, }}
-																	items={usecaseItems}
+																	items={formattedCarousel}
 																	activeIndex={thumbIndex}
 																	infiniteLoop
-																	mouseTracking
+																	mouseTracking={false}
 																	responsive={responsive}
 																	// activeIndex={activeIndex}
 																	controlsStrategy="responsive"
@@ -688,7 +774,6 @@ const WelcomeForm = (props) => {
 																	animationType="fadeout"
           												animationDuration={800}
 																	disableButtonsControls
-																	disableDotsControls
 
 															/>
 														</div>
@@ -721,6 +806,7 @@ const WelcomeForm = (props) => {
         }
     }
 
+		const extraHeight = isCloud ? -7 : 0
     return (
         <div style={{}}>
             {/*selectionOpen ?
@@ -756,7 +842,7 @@ const WelcomeForm = (props) => {
 																disabled={activeStep === 0} 
 																onClick={handleBack}
 																variant={"outlined"}
-																style={{marginLeft: 10, height: 64, width: 100, position: "absolute", top: activeStep === 1 ? -600 : -577, left: activeStep === 1 ? 105 : -145+clickdiff, }} 
+																style={{marginLeft: 10, height: 64, width: 100, position: "absolute", top: activeStep === 1 ? -625-extraHeight : -576, left: activeStep === 1 ? 125 : -125+clickdiff, borderRadius: "50px 0px 0px 50px", }} 
 															>
 																	Back
 															</Button>
@@ -764,7 +850,7 @@ const WelcomeForm = (props) => {
 																variant={"outlined"}
 																color="primary" 
 																onClick={handleNext} 
-																style={{marginLeft: 10, height: 64, width: 100, position: "absolute", top: activeStep === 1 ? -600: -577, left: activeStep === 1 ? 748 : 510+clickdiff, }} 
+																style={{marginLeft: 10, height: 64, width: 100, position: "absolute", top: activeStep === 1 ? -625-extraHeight : -576, left: activeStep === 1 ? 738 : 489+clickdiff, borderRadius: "0px 50px 50px 0px", }}
 																disabled={activeStep === 0 ? orgName.length === 0 || name.length === 0 : false}
 															>
 																	{activeStep === steps.length - 1 ? "Finish" : "Next"}
